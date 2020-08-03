@@ -12,7 +12,7 @@ from .NetMessenger import NetMessenger
 import collections
 import sys
 
-if sys.version >= (3,0):
+if sys.version_info >= (3,0):
     intType = int
     unicode = str
 else:

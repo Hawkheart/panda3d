@@ -6,7 +6,7 @@ from .PyDatagram import PyDatagram
 from .PyDatagramIterator import PyDatagramIterator
 import sys
 
-if sys.version >= (3,0):
+if sys.version_info >= (3,0):
     xrange = range
 
 class AstronDatabaseInterface:
