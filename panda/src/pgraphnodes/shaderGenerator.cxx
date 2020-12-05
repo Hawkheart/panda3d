@@ -1094,7 +1094,9 @@ synthesize_shader(const RenderState *rs, const GeomVertexAnimationSpec &anim) {
     text << "\t uniform float4 clipplane_" << i << ",\n";
   }
 
-  text << "\t uniform float4 attr_ambient,\n";
+  if (key._lighting) {
+    text << "\t uniform float4 attr_ambient,\n";
+  }
   text << "\t uniform float4 attr_colorscale\n";
   text << ") {\n";
 
@@ -1241,12 +1243,23 @@ synthesize_shader(const RenderState *rs, const GeomVertexAnimationSpec &anim) {
       const ShaderKey::TextureInfo &tex = key._textures[i];
       if (tex._flags & ShaderKey::TF_map_normal) {
         if (is_first) {
-          text << "\t float3 tsnormal = normalize((tex" << i << ".xyz * 2) - 1);\n";
+          if (tex._flags & ShaderKey::TF_has_texscale) {
+            text << "\t float3 tsnormal = normalize(((tex" << i << ".xyz * 2) - 1) * texscale_" << i << ");\n";
+          } else if (tex._flags & ShaderKey::TF_has_texmat) {
+            text << "\t float3 tsnormal = normalize(mul(texmat_" << i << ", float4((tex" << i << ".xyz * 2) - 1, 0)).xyz);\n";
+          } else {
+            text << "\t float3 tsnormal = normalize((tex" << i << ".xyz * 2) - 1);\n";
+          }
           is_first = false;
           continue;
         }
         text << "\t tsnormal.z += 1;\n";
         text << "\t float3 tmp" << i << " = tex" << i << ".xyz * float3(-2, -2, 2) + float3(1, 1, -1);\n";
+        if (tex._flags & ShaderKey::TF_has_texscale) {
+          text << "\t tmp" << i << " *= texscale_" << i << ";\n";
+        } else if (tex._flags & ShaderKey::TF_has_texmat) {
+          text << "\t tmp" << i << " = mul(texmat_" << i << ", float4(tmp" << i << ", 0)).xyz;\n";
+        }
         text << "\t tsnormal = normalize(tsnormal * dot(tsnormal, tmp" << i << ") - tmp" << i << " * tsnormal.z);\n";
       }
     }
@@ -1474,7 +1487,9 @@ synthesize_shader(const RenderState *rs, const GeomVertexAnimationSpec &anim) {
     // Combine in alpha, which bypasses lighting calculations.  Use of lerp
     // here is a workaround for a radeon driver bug.
     if (key._calc_primary_alpha) {
-      if (key._color_type == ColorAttrib::T_vertex) {
+      if (key._material_flags & Material::F_diffuse) {
+        text << "\t result.a = attr_material[1].w;\n";
+      } else if (key._color_type == ColorAttrib::T_vertex) {
         text << "\t result.a = l_color.a;\n";
       } else if (key._color_type == ColorAttrib::T_flat) {
         text << "\t result.a = attr_color.a;\n";
