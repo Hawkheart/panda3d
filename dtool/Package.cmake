@@ -324,15 +324,15 @@ package_option(OpenSSL
   "Enable OpenSSL support"
   IMPORTED_AS OpenSSL::SSL OpenSSL::Crypto)
 
-if(OPENSSL_FOUND AND (NOT BUILD_SHARED_LIBS) AND WIN32)
-    message(STATUS "Static Windows build")
-    list(APPEND OPENSSL_LIBRARIES "crypt32")
-endif()
-
 option(REPORT_OPENSSL_ERRORS
   "Define this true to include the OpenSSL code to report verbose
 error messages when they occur." OFF)
 option(REPORT_OPENSSL_ERRORS_Debug "" ON)
+
+if(OPENSSL_FOUND AND (NOT BUILD_SHARED_LIBS) AND WIN32)
+    message(STATUS "Static Windows build")
+    target_link_libraries(PKG::OpenSSL "crypt32" "Ws2_32")
+endif()
 
 package_status(OpenSSL "OpenSSL")
 
