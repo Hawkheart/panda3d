@@ -9,7 +9,6 @@ from panda3d.direct import *
 
 from direct.distributed.MsgTypes import *
 
-
 class PyDatagram(Datagram):
 
     # This is a little helper Dict to replace the huge <if> statement
@@ -30,6 +29,8 @@ class PyDatagram(Datagram):
         STBlob32: (Datagram.addBlob32, None),
         }
 
+    #def addChannel(self, channelId):
+    #    ...
     addChannel = Datagram.addUint64
 
     def addServerHeader(self, channel, sender, code):
@@ -38,11 +39,13 @@ class PyDatagram(Datagram):
         self.addChannel(sender)
         self.addUint16(code)
 
+
     def addOldServerHeader(self, channel, sender, code):
         self.addChannel(channel)
         self.addChannel(sender)
         self.addChannel('A')
         self.addUint16(code)
+
 
     def addServerControlHeader(self, code):
         self.addInt8(1)

@@ -260,7 +260,6 @@ class ConnectionRepository(
             searchPath = getModelPath().getValue()
             for dcFileName in dcFileNames:
                 pathname = Filename(dcFileName)
-                vfs = VirtualFileSystem.getGlobalPtr()
                 vfs.resolveFilename(pathname, searchPath)
                 readResult = dcFile.read(pathname)
                 if not readResult:
