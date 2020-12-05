@@ -331,8 +331,8 @@ option(REPORT_OPENSSL_ERRORS_Debug "" ON)
 
 if(OPENSSL_FOUND AND (NOT BUILD_SHARED_LIBS) AND WIN32)
     message(STATUS "Static Windows build")
-    target_link_libraries(OpenSSL::SSL crypt32 Ws2_32)
-    target_link_libraries(OpenSSL::Crypto crypt32 Ws2_32)
+    target_link_libraries(OpenSSL::SSL INTERFACE crypt32 Ws2_32)
+    target_link_libraries(OpenSSL::Crypto INTERFACE crypt32 Ws2_32)
 endif()
 
 package_status(OpenSSL "OpenSSL")
