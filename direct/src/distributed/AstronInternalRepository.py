@@ -262,6 +262,8 @@ class AstronInternalRepository(ConnectionRepository):
             self.handleGetObjectResp(di)
         elif msgType == CLIENTAGENT_GET_NETWORK_ADDRESS_RESP:
             self.handleGetNetworkAddressResp(di)
+        elif msgType == CLIENTAGENT_GET_TLVS_RESP:
+            self.handleGetTLVsResp(di)
         elif msgType >= 20000:
             # These messages belong to the NetMessenger:
             self.netMessenger.handle(msgType, di)
@@ -470,6 +472,32 @@ class AstronInternalRepository(ConnectionRepository):
 
         try:
             self.__callbacks[ctx](remoteIp, remotePort, localIp, localPort)
+        finally:
+            del self.__callbacks[ctx]
+
+    def getTLVs(self, clientId, callback):
+        """
+        Gets the TLVs associated with a client connection from HAProxy.
+
+        Callback is called as: callback(tlvs), where tlvs is a blob (bytes type).
+        """
+        ctx = self.getContext()
+        self.__callbacks[ctx] = callback
+        dg = PyDatagram()
+        dg.addServerHeader(clientId, self.ourChannel, CLIENTAGENT_GET_TLVS)
+        dg.addUint32(ctx)
+        self.send(dg)
+
+    def handleGetTLVsResp(self, di):
+        ctx = di.getUint32()
+        tlvs = di.getBlob()
+
+        if ctx not in self.__callbacks:
+            self.notify.warning('Received unexpected CLIENTAGENT_GET_TLVS_RESP (ctx: %d)' % ctx)
+            return
+
+        try:
+            self.__callbacks[ctx](tlvs)
         finally:
             del self.__callbacks[ctx]
 
